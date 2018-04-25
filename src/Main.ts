@@ -87,88 +87,111 @@ class Main extends egret.DisplayObjectContainer {
     }
 
     private textfield: egret.TextField;
-
+    private curEle: Ele[] = [];
     /**
      * 创建游戏场景
      * Create a game scene
      */
     private createGameScene() {
-        // let sky = this.createBitmapByName("bg_jpg");
-        // this.addChild(sky);
-        // let stageW = this.stage.stageWidth;
-        // let stageH = this.stage.stageHeight;
-        // sky.width = stageW;
-        // sky.height = stageH;
-
-        // let topMask = new egret.Shape();
-        // topMask.graphics.beginFill(0x000000, 0.5);
-        // topMask.graphics.drawRect(0, 0, stageW, 172);
-        // topMask.graphics.endFill();
-        // topMask.y = 33;
-        // this.addChild(topMask);
-
-        // let icon = this.createBitmapByName("egret_icon_png");
-        // this.addChild(icon);
-        // icon.x = 26;
-        // icon.y = 33;
-
-        // let line = new egret.Shape();
-        // line.graphics.lineStyle(2, 0xffffff);
-        // line.graphics.moveTo(0, 0);
-        // line.graphics.lineTo(0, 117);
-        // line.graphics.endFill();
-        // line.x = 172;
-        // line.y = 61;
-        // this.addChild(line);
-
-
-        // let colorLabel = new egret.TextField();
-        // colorLabel.textColor = 0xffffff;
-        // colorLabel.width = stageW - 172;
-        // colorLabel.textAlign = "center";
-        // colorLabel.text = "Hello Egret";
-        // colorLabel.size = 24;
-        // colorLabel.x = 172;
-        // colorLabel.y = 80;
-        // this.addChild(colorLabel);
-
-        // let textfield = new egret.TextField();
-        // this.addChild(textfield);
-        // textfield.alpha = 0;
-        // textfield.width = stageW - 172;
-        // textfield.textAlign = egret.HorizontalAlign.CENTER;
-        // textfield.size = 24;
-        // textfield.textColor = 0xffffff;
-        // textfield.x = 172;
-        // textfield.y = 135;
-        // this.textfield = textfield;
 
         console.log(this.stage.stageWidth);
         console.log(this.stage.stageHeight);
 
         var bg = new Background();
 
-        var ele0:Ele = new Ele(0, 4, 2);
-        var ele1:Ele = new Ele(1, 2, 2);
-        var ele2:Ele = new Ele(2, 0, 6);
-        var ele3:Ele = new Ele(3, 1, 3);
-        var ele4:Ele = new Ele(4, 2, 4);
-        var ele5:Ele = new Ele(5, 3, 5);
-        var ele6:Ele = new Ele(6, 3, 2);
-        var ele7:Ele = new Ele(7, 1, 2);
+        // var ele0:Ele = new Ele(0, 4, 2);
+        // var ele1:Ele = new Ele(1, 2, 2);
+        // var ele2:Ele = new Ele(2, 0, 6);
+        // var ele3:Ele = new Ele(3, 1, 3);
+        // var ele4:Ele = new Ele(4, 2, 4);
+        // var ele5:Ele = new Ele(5, 3, 5);
+        // var ele6:Ele = new Ele(6, 3, 2);
+        // var ele7:Ele = new Ele(7, 1, 2);
 
         this.addChild(bg);
-        this.addChild(ele0);
-        this.addChild(ele1);
-        this.addChild(ele2);
-        this.addChild(ele3);
-        this.addChild(ele4);
-        this.addChild(ele5);
-        this.addChild(ele6);
-        this.addChild(ele7);
-        
-        ele1.move(3,3);
+        // this.addChild(ele0);
+        // this.addChild(ele1);
+        // this.addChild(ele2);
+        // this.addChild(ele3);
+        // this.addChild(ele4);
+        // this.addChild(ele5);
+        // this.addChild(ele6);
+        // this.addChild(ele7);
 
+        // this.curEle.push(ele7);
+        // this.curEle.push(ele3);
+
+        this.curEle = Ele.create();
+        this.curEle.forEach((ele) => {
+            this.addChild(ele);
+        });
+        
+        // ele0.move(4,8);
+
+        //设置显示对象可以相应触摸事件
+        bg.touchEnabled = true;
+        bg.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onTouchBegin, this);
+        bg.addEventListener(egret.TouchEvent.TOUCH_END, this.onTouchEnd, this);
+
+    }
+
+    private startX:number;
+    private startY:number;
+    private endX:number;
+    private endY:number;
+    private direction:number;
+    private onTouchBegin( evt:egret.TouchEvent ) {
+        this.startX = evt.stageX;
+        this.startY = evt.stageY;
+    }
+    private onTouchEnd( evt:egret.TouchEvent ) {
+        this.endX = evt.stageX;
+        this.endY = evt.stageY;
+        this.direction = TouchCal.cal(this.startX,this.startY,this.endX,this.endY);
+        var indexX;
+        var indexY;
+        switch(this.direction){
+            case 1:
+                // 无操作
+                console.log(1);
+                break;
+            case 3:
+                // 下落
+                indexX = this.curEle[0].indexX;
+                indexY = this.curEle[0].indexY;
+                this.curEle[0].move(indexX,indexY+7);
+                indexX = this.curEle[1].indexX;
+                indexY = this.curEle[1].indexY;
+                this.curEle[1].move(indexX,indexY+7);
+                setTimeout(() => {
+                    this.curEle = Ele.create();
+                    this.curEle.forEach((ele)=>{
+                        this.addChild(ele);
+                    });
+                }, 600);
+                break;
+            case 2:
+                // 向右移动一格
+                indexX = this.curEle[0].indexX > this.curEle[1].indexX ? this.curEle[0].indexX : this.curEle[1].indexX
+                if(indexX < 5 ){
+                    this.curEle[0].move(this.curEle[0].indexX+1,this.curEle[0].indexY);
+                    this.curEle[1].move(this.curEle[1].indexX+1,this.curEle[1].indexY);
+                }
+                break;
+            case 4:
+                // 向左移动一格
+                indexX = this.curEle[0].indexX < this.curEle[1].indexX ? this.curEle[0].indexX : this.curEle[1].indexX
+                if(indexX > 0 ){
+                    this.curEle[0].move(this.curEle[0].indexX-1,this.curEle[0].indexY);
+                    this.curEle[1].move(this.curEle[1].indexX-1,this.curEle[1].indexY);
+                }
+                break;
+            case 0:
+                // 变换
+                console.log(0);
+                Ele.transform(this.curEle[0],this.curEle[1]);
+                break;
+        }
     }
 
     /**

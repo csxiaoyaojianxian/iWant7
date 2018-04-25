@@ -1,2 +1,5 @@
-# iWant7
-微信小游戏我要7
+# egret
+
+$ egret create demo
+$ egret build
+$ egret startserver
