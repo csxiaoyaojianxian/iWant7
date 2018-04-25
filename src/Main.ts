@@ -158,6 +158,7 @@ class Main extends egret.DisplayObjectContainer {
         var ele7:Ele = new Ele(7, 1, 2);
 
         this.addChild(bg);
+        this.addChild(ele0);
         this.addChild(ele1);
         this.addChild(ele2);
         this.addChild(ele3);
@@ -165,6 +166,7 @@ class Main extends egret.DisplayObjectContainer {
         this.addChild(ele5);
         this.addChild(ele6);
         this.addChild(ele7);
+        
         ele1.move(3,3);
 
     }

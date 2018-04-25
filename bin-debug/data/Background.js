@@ -24,11 +24,9 @@ var Background = (function (_super) {
         shp.graphics.beginFill(0xcdcdcd, 1);
         shp.graphics.drawRect(0, 0, this.stage.stageWidth, this.stage.stageHeight);
         shp.graphics.endFill();
-        this.addChild(shp);
         shp.graphics.beginFill(0xc2e6f1, 1);
         shp.graphics.drawRoundRect(50, 205, 540, 800, 60);
         shp.graphics.endFill();
-        this.addChild(shp);
         //   |----50----|-15-|--80--|6|--80--|6|--80--|6|--80--|6|--80--|6|--80--|-15-|----50----|
         var baseHeight = 220;
         for (var i = 0; i < 6; i++) {
@@ -36,7 +34,6 @@ var Background = (function (_super) {
                 shp.graphics.beginFill(0xe5f4f9, 1);
                 shp.graphics.drawRoundRect(65 + 86 * i, baseHeight + 86 * j, 80, 80, 40);
                 shp.graphics.endFill();
-                this.addChild(shp);
             }
         }
         for (var i = 0; i < 6; i++) {
@@ -44,10 +41,9 @@ var Background = (function (_super) {
                 shp.graphics.beginFill(0xb3d8e8, 1);
                 shp.graphics.drawRoundRect(65 + 86 * i, baseHeight + 86 * 2 + 86 * j, 80, 80, 40);
                 shp.graphics.endFill();
-                this.addChild(shp);
             }
         }
-        // this.addChild(shp);
+        this.addChild(shp);
     };
     return Background;
 }(egret.DisplayObjectContainer));

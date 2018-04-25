@@ -103,12 +103,15 @@ var Main = (function (_super) {
                     case 1:
                         _a.sent();
                         this.createGameScene();
-                        return [4 /*yield*/, RES.getResAsync("description_json")];
+                        return [4 /*yield*/, RES.getResAsync("description_json")
+                            // this.startAnimation(result);
+                        ];
                     case 2:
                         result = _a.sent();
-                        this.startAnimation(result);
+                        // this.startAnimation(result);
                         return [4 /*yield*/, platform.login()];
                     case 3:
+                        // this.startAnimation(result);
                         _a.sent();
                         return [4 /*yield*/, platform.getUserInfo()];
                     case 4:
@@ -195,18 +198,25 @@ var Main = (function (_super) {
         // this.textfield = textfield;
         console.log(this.stage.stageWidth);
         console.log(this.stage.stageHeight);
-        // var bg = new Background();
-        var ele = new Ele();
-        ele.drawEle(1, 2, 2);
-        ele.drawEle(2, 0, 6);
-        ele.drawEle(3, 1, 3);
-        ele.drawEle(4, 2, 4);
-        ele.drawEle(5, 3, 5);
-        ele.drawEle(6, 3, 2);
-        ele.drawEle(0, 4, 2);
-        ele.drawEle(7, 1, 2);
-        // this.addChild(bg);
-        this.addChild(ele);
+        var bg = new Background();
+        var ele0 = new Ele(0, 4, 2);
+        var ele1 = new Ele(1, 2, 2);
+        var ele2 = new Ele(2, 0, 6);
+        var ele3 = new Ele(3, 1, 3);
+        var ele4 = new Ele(4, 2, 4);
+        var ele5 = new Ele(5, 3, 5);
+        var ele6 = new Ele(6, 3, 2);
+        var ele7 = new Ele(7, 1, 2);
+        this.addChild(bg);
+        this.addChild(ele0);
+        this.addChild(ele1);
+        this.addChild(ele2);
+        this.addChild(ele3);
+        this.addChild(ele4);
+        this.addChild(ele5);
+        this.addChild(ele6);
+        this.addChild(ele7);
+        ele1.move(3, 3);
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
