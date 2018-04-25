@@ -70,10 +70,66 @@ var Ele = (function (_super) {
         this.addChild(this.sprite);
     };
     Ele.prototype.move = function (indexX, indexY) {
+        var tw = egret.Tween.get(this.sprite);
+        var distanceY = indexY - this.indexY;
+        this.indexX = indexX;
+        this.indexY = indexY;
+        tw.to({
+            x: 65 + 86 * indexX,
+            y: this.baseHeight + 86 * indexY
+        }, distanceY * 100, egret.Ease.circIn);
+        var downSound = RES.getRes("down_mp3");
+        setTimeout(function () {
+            downSound.play(0, 1);
+        }, distanceY * 100 + 80);
+    };
+    Ele.prototype.moveWithOutAnimation = function (indexX, indexY) {
+        this.indexX = indexX;
+        this.indexY = indexY;
         this.sprite.x = 65 + 86 * indexX;
         this.sprite.y = this.baseHeight + 86 * indexY;
+    };
+    // 创建新元素
+    Ele.create = function () {
+        // 获取num1   0-6 随机数
+        var num1 = Math.floor(Math.random() * 7);
+        // 获取num2  num1+num2 != 7
+        var num2 = Math.floor(Math.random() * 7);
+        while (num1 + num2 == 7) {
+            num2 = Math.floor(Math.random() * 7);
+        }
+        var curEle = [];
+        curEle.push(new Ele(num1, 2, 1));
+        curEle.push(new Ele(num2, 3, 1));
+        return curEle;
+    };
+    Ele.transform = function (ele1, ele2) {
+        // 同一行
+        if (ele1.indexY == ele2.indexY) {
+            if (ele1.indexX < ele2.indexX) {
+                ele1.indexY -= 1;
+                ele2.indexX -= 1;
+            }
+            else {
+                ele2.indexY -= 1;
+                ele1.indexX -= 1;
+            }
+        }
+        else {
+            if (ele1.indexY < ele2.indexY) {
+                ele1.indexX += 1;
+                ele1.indexY += 1;
+            }
+            else {
+                ele2.indexX += 1;
+                ele2.indexY += 1;
+            }
+        }
+        ele1.moveWithOutAnimation(ele1.indexX, ele1.indexY);
+        ele2.moveWithOutAnimation(ele2.indexX, ele2.indexY);
+        var tapSound = RES.getRes("tap_mp3");
+        tapSound.play(0, 1);
     };
     return Ele;
 }(egret.DisplayObjectContainer));
 __reflect(Ele.prototype, "Ele");
-//# sourceMappingURL=Ele.js.map
