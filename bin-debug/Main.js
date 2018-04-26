@@ -205,12 +205,14 @@ var Main = (function (_super) {
                 break;
             case 3:
                 // 下落
-                indexX = this.curEle[0].indexX;
-                indexY = this.curEle[0].indexY;
-                this.curEle[0].move(indexX, indexY + 7);
-                indexX = this.curEle[1].indexX;
-                indexY = this.curEle[1].indexY;
-                this.curEle[1].move(indexX, indexY + 7);
+                if (this.curEle[0].indexY > this.curEle[1].indexY) {
+                    this.curEle[0].down();
+                    this.curEle[1].down();
+                }
+                else {
+                    this.curEle[1].down();
+                    this.curEle[0].down();
+                }
                 setTimeout(function () {
                     _this.curEle = Ele.create();
                     _this.curEle.forEach(function (ele) {
@@ -281,3 +283,4 @@ var Main = (function (_super) {
     return Main;
 }(egret.DisplayObjectContainer));
 __reflect(Main.prototype, "Main");
+//# sourceMappingURL=Main.js.map

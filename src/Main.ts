@@ -157,12 +157,13 @@ class Main extends egret.DisplayObjectContainer {
                 break;
             case 3:
                 // 下落
-                indexX = this.curEle[0].indexX;
-                indexY = this.curEle[0].indexY;
-                this.curEle[0].move(indexX,indexY+7);
-                indexX = this.curEle[1].indexX;
-                indexY = this.curEle[1].indexY;
-                this.curEle[1].move(indexX,indexY+7);
+                if(this.curEle[0].indexY > this.curEle[1].indexY){
+                    this.curEle[0].down();
+                    this.curEle[1].down();
+                }else{
+                    this.curEle[1].down();
+                    this.curEle[0].down();
+                }
                 setTimeout(() => {
                     this.curEle = Ele.create();
                     this.curEle.forEach((ele)=>{

@@ -6,6 +6,8 @@ class Ele extends egret.DisplayObjectContainer {
     public indexX:number;
     public indexY:number;
 
+    public static matrix = [];
+
     public constructor(num:number,indexX:number,indexY:number) {
         super();
         this.num = num;
@@ -54,7 +56,7 @@ class Ele extends egret.DisplayObjectContainer {
         label.width = 80;
         label.height = 80;
         label.x = 0;
-        label.y = 0;
+        label.y = 5; // 用于真机适配
         label.textColor = style[this.num][4];
         // label.fontFamily = "YaHei";
         label.textAlign = egret.HorizontalAlign.CENTER;
@@ -78,12 +80,19 @@ class Ele extends egret.DisplayObjectContainer {
             x:65 + 86 * indexX,
             y:this.baseHeight + 86 * indexY
         }, distanceY*100,  egret.Ease.circIn );
+        // }, distanceY*100 );
 
         var downSound:egret.Sound = RES.getRes("down_mp3");
         setTimeout(function() {
             downSound.play(0,1);
         }, distanceY*100+80);
         
+    }
+
+    public down(){
+        var indexY = Ele.getDownLocation( this.indexX );
+        this.move(this.indexX,indexY);
+
     }
 
     public moveWithOutAnimation(indexX:number,indexY:number){
@@ -134,5 +143,33 @@ class Ele extends egret.DisplayObjectContainer {
         var tapSound:egret.Sound = RES.getRes("tap_mp3");
         tapSound.play(0,1);
     }
+
+    public static getDownLocation(indexX):number{
+        // 初始化
+        if(Ele.matrix.length == 0){
+            for(var i = 0; i < 6; i++ ){
+                Ele.matrix[i] = [];
+                for(var j = 0; j < 8; j++ ){
+                    Ele.matrix[i][j] = 0;
+                }
+            }
+        }
+        // 查询落点位置
+        var indexY:number = 8;
+        for(var i = 2; i < 9; i++){
+            if(Ele.matrix[indexX][i] == 1){
+                indexY = i-1;
+                Ele.matrix[indexX][indexY] = 1;
+                break;
+            }
+            if(i == 8){
+                indexY = 8;
+                Ele.matrix[indexX][indexY] = 1;
+            }
+        }
+        return indexY;
+
+    }
+
 
 }

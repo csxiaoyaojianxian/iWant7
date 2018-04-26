@@ -57,7 +57,7 @@ var Ele = (function (_super) {
         label.width = 80;
         label.height = 80;
         label.x = 0;
-        label.y = 0;
+        label.y = 5; // 用于真机适配
         label.textColor = style[this.num][4];
         // label.fontFamily = "YaHei";
         label.textAlign = egret.HorizontalAlign.CENTER;
@@ -78,10 +78,15 @@ var Ele = (function (_super) {
             x: 65 + 86 * indexX,
             y: this.baseHeight + 86 * indexY
         }, distanceY * 100, egret.Ease.circIn);
+        // }, distanceY*100 );
         var downSound = RES.getRes("down_mp3");
         setTimeout(function () {
             downSound.play(0, 1);
         }, distanceY * 100 + 80);
+    };
+    Ele.prototype.down = function () {
+        var indexY = Ele.getDownLocation(this.indexX);
+        this.move(this.indexX, indexY);
     };
     Ele.prototype.moveWithOutAnimation = function (indexX, indexY) {
         this.indexX = indexX;
@@ -130,6 +135,33 @@ var Ele = (function (_super) {
         var tapSound = RES.getRes("tap_mp3");
         tapSound.play(0, 1);
     };
+    Ele.getDownLocation = function (indexX) {
+        // 初始化
+        if (Ele.matrix.length == 0) {
+            for (var i = 0; i < 6; i++) {
+                Ele.matrix[i] = [];
+                for (var j = 0; j < 8; j++) {
+                    Ele.matrix[i][j] = 0;
+                }
+            }
+        }
+        // 查询落点位置
+        var indexY = 8;
+        for (var i = 2; i < 9; i++) {
+            if (Ele.matrix[indexX][i] == 1) {
+                indexY = i - 1;
+                Ele.matrix[indexX][indexY] = 1;
+                break;
+            }
+            if (i == 8) {
+                indexY = 8;
+                Ele.matrix[indexX][indexY] = 1;
+            }
+        }
+        return indexY;
+    };
+    Ele.matrix = [];
     return Ele;
 }(egret.DisplayObjectContainer));
 __reflect(Ele.prototype, "Ele");
+//# sourceMappingURL=Ele.js.map
