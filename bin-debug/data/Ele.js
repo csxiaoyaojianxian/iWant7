@@ -84,6 +84,8 @@ var Ele = (function (_super) {
         var distanceX = indexX - this.indexX;
         var distanceY = indexY - this.indexY;
         var distance = distanceX > distanceY ? distanceX : distanceY;
+        Ele.checkQueue.push([indexX, indexY]);
+        Ele.checkQueue.push([this.indexX, this.indexY]);
         Ele.matrix[this.indexX][this.indexY] = null;
         Ele.matrix[indexX][indexY] = this;
         this.indexX = indexX;
@@ -101,11 +103,13 @@ var Ele = (function (_super) {
                 callback();
             }, Math.sqrt(distance) * 200);
         }
-        // 播放音效
+        // 播放音效、震动
         var downSound = RES.getRes("down_mp3");
         setTimeout(function () {
             downSound.play(0, 1);
-        }, distance * 100 + 80);
+            // 震动
+            platform.vibrateShort();
+        }, distance * 80);
     };
     // 只移动，无动画，且不计入matrix
     Ele.prototype.moveWithOutAnimation = function (indexX, indexY) {
@@ -113,6 +117,8 @@ var Ele = (function (_super) {
         this.indexY = indexY;
         this.sprite.x = 65 + 86 * indexX;
         this.sprite.y = this.baseHeight + 86 * indexY;
+        // 震动
+        platform.vibrateShort();
     };
     // 下落到能下落的最低处
     Ele.prototype.down = function () {
@@ -145,7 +151,7 @@ var Ele = (function (_super) {
         // TODO 添加事件
         ele.touchEnabled = true;
         // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, ele.remove, ele );
-        ele.addEventListener(egret.TouchEvent.TOUCH_TAP, function () { return ele.changeTo7(true, false, true, false); }, ele);
+        // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, ()=>ele.changeTo7(true,false,true,false), ele );
         return ele;
     };
     Ele.prototype.remove = function () {
@@ -161,6 +167,9 @@ var Ele = (function (_super) {
     };
     // 转化为7
     Ele.prototype.changeTo7 = function (top, right, bottom, left) {
+        if (!top && !right && !bottom && !left) {
+            return;
+        }
         var indexX = this.indexX;
         var indexY = this.indexY;
         Ele.matrix[indexX][indexY].alpha = 0;
@@ -282,6 +291,8 @@ var Ele = (function (_super) {
         ele2.moveWithOutAnimation(ele2.indexX, ele2.indexY);
         var tapSound = RES.getRes("tap_mp3");
         tapSound.play(0, 1);
+        // 震动
+        platform.vibrateShort();
     };
     // 计算从初始状态下落的位置
     Ele.getDownLocation = function (ele) {
@@ -313,23 +324,110 @@ var Ele = (function (_super) {
     };
     // 检查是否可以组成7，每次需要传入至少一个元素加入待检查队列
     Ele.checkPuzzle = function (eleList) {
+        if (eleList === void 0) { eleList = []; }
+        var top, right, bottom, left;
         // 加入队列
         eleList.forEach(function (ele) {
-            Ele.checkQueue.push(ele);
+            Ele.checkQueue.push([ele.indexX, ele.indexY]);
         });
-        // 初始化为0
-        if (Ele.puzzleResult.length == 0) {
-            for (var i = 0; i < 6; i++) {
-                Ele.puzzleResult[i] = [];
-                for (var j = 0; j < 9; j++) {
-                    Ele.puzzleResult[i][j] = 0;
-                }
+        var timer = setInterval(function () {
+            if (Ele.checkQueue.length <= 0) {
+                clearInterval(timer);
             }
-        }
+            else {
+                var curPosition = Ele.checkQueue.pop();
+                var curEle = Ele.matrix[curPosition[0]][curPosition[1]];
+                if (!curEle) {
+                    return;
+                }
+                var curNum = curEle.num;
+                if (curNum >= 0 && curNum <= 9) {
+                    if (curNum == 8 || curNum == 9) {
+                        curNum = 7;
+                    }
+                }
+                else {
+                    return;
+                }
+                // top
+                top = false;
+                if ((curEle.indexY - 1) >= 0) {
+                    var topEle = Ele.matrix[curEle.indexX][curEle.indexY - 1];
+                    var topEleNum;
+                    if (topEle && topEle.num >= 0 && topEle.num <= 9) {
+                        if (topEle.num == 8 || topEle.num == 9) {
+                            topEleNum = 7;
+                        }
+                        else {
+                            topEleNum = topEle.num;
+                        }
+                        if ((topEleNum + curNum) == 7) {
+                            top = true;
+                            Ele.checkQueue.push([curEle.indexX, curEle.indexY - 1]);
+                        }
+                    }
+                }
+                // right
+                right = false;
+                if ((curEle.indexX + 1) <= 5) {
+                    var rightEle = Ele.matrix[curEle.indexX + 1][curEle.indexY];
+                    var rightEleNum;
+                    if (rightEle && rightEle.num >= 0 && rightEle.num <= 9) {
+                        if (rightEle.num == 8 || rightEle.num == 9) {
+                            rightEleNum = 7;
+                        }
+                        else {
+                            rightEleNum = rightEle.num;
+                        }
+                        if ((rightEleNum + curNum) == 7) {
+                            right = true;
+                            Ele.checkQueue.push([curEle.indexX + 1, curEle.indexY]);
+                        }
+                    }
+                }
+                // bottom
+                bottom = false;
+                if ((curEle.indexY + 1) <= 8) {
+                    var bottomEle = Ele.matrix[curEle.indexX][curEle.indexY + 1];
+                    var bottomEleNum;
+                    if (bottomEle && bottomEle.num >= 0 && bottomEle.num <= 9) {
+                        if (bottomEle.num == 8 || bottomEle.num == 9) {
+                            bottomEleNum = 7;
+                        }
+                        else {
+                            bottomEleNum = bottomEle.num;
+                        }
+                        if ((bottomEleNum + curNum) == 7) {
+                            bottom = true;
+                            Ele.checkQueue.push([curEle.indexX, curEle.indexY + 1]);
+                        }
+                    }
+                }
+                // left
+                left = false;
+                if ((curEle.indexX - 1) >= 0) {
+                    var leftEle = Ele.matrix[curEle.indexX - 1][curEle.indexY];
+                    var leftEleNum;
+                    if (leftEle && leftEle.num >= 0 && leftEle.num <= 9) {
+                        if (leftEle.num == 8 || leftEle.num == 9) {
+                            leftEleNum = 7;
+                        }
+                        else {
+                            leftEleNum = leftEle.num;
+                        }
+                        if ((leftEleNum + curNum) == 7) {
+                            left = true;
+                            Ele.checkQueue.push([curEle.indexX - 1, curEle.indexY]);
+                        }
+                    }
+                }
+                curEle.changeTo7(top, right, bottom, left);
+            }
+        }, 350);
     };
     // 用于记录场景中格子的占用 初始化为null
     Ele.matrix = [];
-    // 检查队列，用于存放待检查元素
+    // 检查队列，用于存放待检查元素的位置 [indexX,indexY]
     Ele.checkQueue = [];
     return Ele;
 }(egret.DisplayObjectContainer));

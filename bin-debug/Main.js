@@ -166,9 +166,10 @@ var Main = (function (_super) {
                     this.curEle[0].down();
                 }
                 setTimeout(function () {
+                    Ele.checkPuzzle(_this.curEle);
                     _this.curEle = Ele.createPair(_this);
                     _this.bg.touchEnabled = true;
-                }, 800);
+                }, 600);
                 break;
             case 2:
                 // 向右移动一格

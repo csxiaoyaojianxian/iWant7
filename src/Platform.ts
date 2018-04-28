@@ -8,7 +8,9 @@ declare interface Platform {
 
     getUserInfo(): Promise<any>;
 
-    login(): Promise<any>
+    login(): Promise<any>;
+
+    vibrateShort(): Promise<any>;
 
 }
 
@@ -19,6 +21,22 @@ class DebugPlatform implements Platform {
     async login() {
 
     }
+
+    async vibrateShort() {
+
+    }
+    // 微信小游戏中添加：
+    // vibrateShort() {
+    // 	return new Promise((resolve, reject) => {
+    //         wx.vibrateShort({
+    //             success: function (res) {
+    //                 resolve(res);
+    //             }
+    //         })
+    //     })
+    // }
+
+
 }
 
 
@@ -34,8 +52,3 @@ declare interface Window {
 
     platform: Platform
 }
-
-
-
-
-

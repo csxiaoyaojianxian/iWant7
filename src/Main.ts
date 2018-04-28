@@ -114,10 +114,10 @@ class Main extends egret.DisplayObjectContainer {
                     this.curEle[0].down();
                 }
                 setTimeout(() => {
+                    Ele.checkPuzzle(this.curEle);
                     this.curEle = Ele.createPair(this);
-
                     this.bg.touchEnabled = true;
-                }, 800);
+                }, 600);
                 break;
             case 2:
                 // 向右移动一格
@@ -126,6 +126,7 @@ class Main extends egret.DisplayObjectContainer {
                     this.curEle[0].moveWithOutAnimation(this.curEle[0].indexX+1,this.curEle[0].indexY);
                     this.curEle[1].moveWithOutAnimation(this.curEle[1].indexX+1,this.curEle[1].indexY);
                 }
+                
                 break;
             case 4:
                 // 向左移动一格
