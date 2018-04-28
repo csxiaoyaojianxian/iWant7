@@ -1,38 +1,11 @@
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 
 class Main extends egret.DisplayObjectContainer {
 
-
+    public static vector:Main;
 
     public constructor() {
         super();
+        Main.vector = this;
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
     }
 
@@ -88,6 +61,7 @@ class Main extends egret.DisplayObjectContainer {
 
     private textfield: egret.TextField;
     private curEle: Ele[] = [];
+    private bg:Background = new Background();
     /**
      * 创建游戏场景
      * Create a game scene
@@ -97,41 +71,15 @@ class Main extends egret.DisplayObjectContainer {
         console.log(this.stage.stageWidth);
         console.log(this.stage.stageHeight);
 
-        var bg = new Background();
+        this.bg = new Background();
+        this.addChild(this.bg);
 
-        // var ele0:Ele = new Ele(0, 4, 2);
-        // var ele1:Ele = new Ele(1, 2, 2);
-        // var ele2:Ele = new Ele(2, 0, 6);
-        // var ele3:Ele = new Ele(3, 1, 3);
-        // var ele4:Ele = new Ele(4, 2, 4);
-        // var ele5:Ele = new Ele(5, 3, 5);
-        // var ele6:Ele = new Ele(6, 3, 2);
-        // var ele7:Ele = new Ele(7, 1, 2);
-
-        this.addChild(bg);
-        // this.addChild(ele0);
-        // this.addChild(ele1);
-        // this.addChild(ele2);
-        // this.addChild(ele3);
-        // this.addChild(ele4);
-        // this.addChild(ele5);
-        // this.addChild(ele6);
-        // this.addChild(ele7);
-
-        // this.curEle.push(ele7);
-        // this.curEle.push(ele3);
-
-        this.curEle = Ele.create();
-        this.curEle.forEach((ele) => {
-            this.addChild(ele);
-        });
-        
-        // ele0.move(4,8);
+        this.curEle = Ele.createPair(this);
 
         //设置显示对象可以相应触摸事件
-        bg.touchEnabled = true;
-        bg.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onTouchBegin, this);
-        bg.addEventListener(egret.TouchEvent.TOUCH_END, this.onTouchEnd, this);
+        this.bg.touchEnabled = true;
+        this.bg.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onTouchBegin, this);
+        this.bg.addEventListener(egret.TouchEvent.TOUCH_END, this.onTouchEnd, this);
 
     }
 
@@ -157,6 +105,7 @@ class Main extends egret.DisplayObjectContainer {
                 break;
             case 3:
                 // 下落
+                this.bg.touchEnabled = false;
                 if(this.curEle[0].indexY > this.curEle[1].indexY){
                     this.curEle[0].down();
                     this.curEle[1].down();
@@ -165,26 +114,25 @@ class Main extends egret.DisplayObjectContainer {
                     this.curEle[0].down();
                 }
                 setTimeout(() => {
-                    this.curEle = Ele.create();
-                    this.curEle.forEach((ele)=>{
-                        this.addChild(ele);
-                    });
-                }, 600);
+                    this.curEle = Ele.createPair(this);
+
+                    this.bg.touchEnabled = true;
+                }, 800);
                 break;
             case 2:
                 // 向右移动一格
                 indexX = this.curEle[0].indexX > this.curEle[1].indexX ? this.curEle[0].indexX : this.curEle[1].indexX
                 if(indexX < 5 ){
-                    this.curEle[0].move(this.curEle[0].indexX+1,this.curEle[0].indexY);
-                    this.curEle[1].move(this.curEle[1].indexX+1,this.curEle[1].indexY);
+                    this.curEle[0].moveWithOutAnimation(this.curEle[0].indexX+1,this.curEle[0].indexY);
+                    this.curEle[1].moveWithOutAnimation(this.curEle[1].indexX+1,this.curEle[1].indexY);
                 }
                 break;
             case 4:
                 // 向左移动一格
                 indexX = this.curEle[0].indexX < this.curEle[1].indexX ? this.curEle[0].indexX : this.curEle[1].indexX
                 if(indexX > 0 ){
-                    this.curEle[0].move(this.curEle[0].indexX-1,this.curEle[0].indexY);
-                    this.curEle[1].move(this.curEle[1].indexX-1,this.curEle[1].indexY);
+                    this.curEle[0].moveWithOutAnimation(this.curEle[0].indexX-1,this.curEle[0].indexY);
+                    this.curEle[1].moveWithOutAnimation(this.curEle[1].indexX-1,this.curEle[1].indexY);
                 }
                 break;
             case 0:
