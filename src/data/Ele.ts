@@ -171,7 +171,7 @@ class Ele extends egret.DisplayObjectContainer {
         console.log('create');
         var ele:Ele = new Ele(num, indexX, indexY);
         // TODO 添加事件
-        ele.touchEnabled = true;
+        // ele.touchEnabled = true;
         // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, Ele.remove, ele );
         // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, ()=>ele.changeTo7(true,false,true,false), ele );
         return ele;
@@ -191,13 +191,27 @@ class Ele extends egret.DisplayObjectContainer {
             callback?callback():null;
         }
         return new Promise((resolve,reject)=>{
+
+            Score.addScore( locations.length*5 );
+
             for(var i = 0; i < locations.length; i++){
                 var location:number[] = locations[i];
                 var curEle:Ele = Ele.matrix[location[0]][location[1]];
+                
                 if(curEle){
+                    Score.addScore( (curEle.num - 6)*5 );
+
                     Ele.matrix[location[0]][location[1]] = null;
                 }
                 var tw = egret.Tween.get( curEle );
+                // 播放音效、震动
+                var disappearSound:egret.Sound = RES.getRes("disappear_mp3");
+                setTimeout(function() {
+                    disappearSound.play(0,1);
+                    // 震动
+                    platform.vibrateShort();
+                }, 200);
+
                 tw.to( {alpha:0}, 800 ).call( ()=>{ 
                     // Main.vector.removeChild(curEle);
                     resolve();
@@ -290,16 +304,26 @@ class Ele extends egret.DisplayObjectContainer {
                         return;
                     case 1:
                         newEle = Ele.create(7, indexX, indexY);
+                        Score.addScore(2);
                         break;
                     case 2:
                         // 双重7
                         newEle = Ele.create(8, indexX, indexY);
+                        Score.addScore(4);
+                        var Sound_2:egret.Sound = RES.getRes("2_mp3");
+                        Sound_2.play(0,1);
                         break;
                     case 3:
                         // 三重7
                         newEle = Ele.create(8, indexX, indexY);
+                        Score.addScore(8);
+                        var Sound_3:egret.Sound = RES.getRes("3_wav");
+                        Sound_3.play(0,1);
                         break;
                     default:
+                        var Sound_4:egret.Sound = RES.getRes("4_wav");
+                        Sound_4.play(0,1);
+                        Score.addScore(16);
                         newEle = Ele.create(8, indexX, indexY);
                 }
                 
@@ -321,6 +345,9 @@ class Ele extends egret.DisplayObjectContainer {
             Promise.all([pTidy1,pTidy2,pTidy3]).then(()=>{
                 Ele.checkPuzzle([],callback);
             });
+
+            // TODO
+            Score.addScore(10);
             
         });
     }
@@ -357,6 +384,7 @@ class Ele extends egret.DisplayObjectContainer {
 
     // 重置
     public static reset(){
+        Score.setScore(0);
         for(var i = 0; i < 6; i++){
             for(var j = 0; j < 9; j++){
                 Ele.matrix[i][j] = null;
@@ -453,7 +481,7 @@ class Ele extends egret.DisplayObjectContainer {
                 while(tempQueue.length > 0){
                     var tempEle = tempQueue.pop();
                     result.push(tempEle);
-                    // 每次检查4个方向，并保证不再result中
+                    // 每次检查4个方向，并保证不在result中
                     if(tempEle.indexY > 0 && Ele.matrix[tempEle.indexX][tempEle.indexY-1] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX][tempEle.indexY-1].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX][tempEle.indexY-1]) == -1 ){
                         tempQueue.push(Ele.matrix[tempEle.indexX][tempEle.indexY-1]);
                     }

@@ -21,7 +21,7 @@ var Background = (function (_super) {
     };
     Background.prototype.drawBg = function () {
         var shp = new egret.Shape();
-        shp.graphics.beginFill(0xcdcdcd, 1);
+        shp.graphics.beginFill(0xfffaf0, 1);
         shp.graphics.drawRect(0, 0, this.stage.stageWidth, this.stage.stageHeight);
         shp.graphics.endFill();
         shp.graphics.beginFill(0xc2e6f1, 1);

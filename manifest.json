@@ -13,6 +13,7 @@
 		"bin-debug/Platform.js",
 		"bin-debug/control/TouchCal.js",
 		"bin-debug/data/Background.js",
-		"bin-debug/data/Ele.js"
+		"bin-debug/data/Ele.js",
+		"bin-debug/data/Score.js"
 	]
 }

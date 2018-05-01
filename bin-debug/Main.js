@@ -49,6 +49,7 @@ var Main = (function (_super) {
         var _this = _super.call(this) || this;
         _this.curEle = [];
         _this.bg = new Background();
+        _this.score = new Score();
         Main.vector = _this;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
         return _this;
@@ -132,6 +133,8 @@ var Main = (function (_super) {
         console.log(this.stage.stageHeight);
         this.bg = new Background();
         this.addChild(this.bg);
+        this.score = new Score();
+        this.addChild(this.score);
         this.curEle = Ele.createPair(this);
         //设置显示对象可以相应触摸事件
         this.bg.touchEnabled = true;
@@ -172,8 +175,18 @@ var Main = (function (_super) {
                         // 检查合并
                         Ele.checkPuzzle([[this.curEle[1].indexX, this.curEle[1].indexY], [this.curEle[0].indexX, this.curEle[0].indexY]], function (gameOver) {
                             if (gameOver) {
-                                Ele.reset();
-                                _this.createGameScene();
+                                var loseSound = RES.getRes("lose_mp3");
+                                setTimeout(function () {
+                                    loseSound.play(0, 1);
+                                    // 震动
+                                    platform.vibrateShort();
+                                }, 80);
+                                // reset
+                                _this.score.showPanel(function () {
+                                    Ele.reset();
+                                    _this.createGameScene();
+                                });
+                                // this.bg.touchEnabled = false;
                             }
                             else {
                                 // 创建元素

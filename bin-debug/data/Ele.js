@@ -194,7 +194,7 @@ var Ele = (function (_super) {
         console.log('create');
         var ele = new Ele(num, indexX, indexY);
         // TODO 添加事件
-        ele.touchEnabled = true;
+        // ele.touchEnabled = true;
         // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, Ele.remove, ele );
         // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, ()=>ele.changeTo7(true,false,true,false), ele );
         return ele;
@@ -214,13 +214,22 @@ var Ele = (function (_super) {
             callback ? callback() : null;
         }
         return new Promise(function (resolve, reject) {
+            Score.addScore(locations.length * 5);
             for (var i = 0; i < locations.length; i++) {
                 var location = locations[i];
                 var curEle = Ele.matrix[location[0]][location[1]];
                 if (curEle) {
+                    Score.addScore((curEle.num - 6) * 5);
                     Ele.matrix[location[0]][location[1]] = null;
                 }
                 var tw = egret.Tween.get(curEle);
+                // 播放音效、震动
+                var disappearSound = RES.getRes("disappear_mp3");
+                setTimeout(function () {
+                    disappearSound.play(0, 1);
+                    // 震动
+                    platform.vibrateShort();
+                }, 200);
                 tw.to({ alpha: 0 }, 800).call(function () {
                     // Main.vector.removeChild(curEle);
                     resolve();
@@ -305,7 +314,7 @@ var Ele = (function (_super) {
                         }
                         // 等待合并动画
                         return [4 /*yield*/, Promise.all([p1, p2, p3, p4]).then(function () { return __awaiter(_this, void 0, void 0, function () {
-                                var times, newEle, pTidy1, pTidy2, pTidy3;
+                                var times, newEle, Sound_2, Sound_3, Sound_4, pTidy1, pTidy2, pTidy3;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
@@ -320,16 +329,26 @@ var Ele = (function (_super) {
                                                     return [2 /*return*/];
                                                 case 1:
                                                     newEle = Ele.create(7, indexX, indexY);
+                                                    Score.addScore(2);
                                                     break;
                                                 case 2:
                                                     // 双重7
                                                     newEle = Ele.create(8, indexX, indexY);
+                                                    Score.addScore(4);
+                                                    Sound_2 = RES.getRes("2_mp3");
+                                                    Sound_2.play(0, 1);
                                                     break;
                                                 case 3:
                                                     // 三重7
                                                     newEle = Ele.create(8, indexX, indexY);
+                                                    Score.addScore(8);
+                                                    Sound_3 = RES.getRes("3_wav");
+                                                    Sound_3.play(0, 1);
                                                     break;
                                                 default:
+                                                    Sound_4 = RES.getRes("4_wav");
+                                                    Sound_4.play(0, 1);
+                                                    Score.addScore(16);
                                                     newEle = Ele.create(8, indexX, indexY);
                                             }
                                             // 原地移动，目的是为了记录matrix
@@ -350,6 +369,8 @@ var Ele = (function (_super) {
                                             Promise.all([pTidy1, pTidy2, pTidy3]).then(function () {
                                                 Ele.checkPuzzle([], callback);
                                             });
+                                            // TODO
+                                            Score.addScore(10);
                                             return [2 /*return*/];
                                     }
                                 });
@@ -405,6 +426,7 @@ var Ele = (function (_super) {
     };
     // 重置
     Ele.reset = function () {
+        Score.setScore(0);
         for (var i = 0; i < 6; i++) {
             for (var j = 0; j < 9; j++) {
                 Ele.matrix[i][j] = null;
@@ -498,7 +520,7 @@ var Ele = (function (_super) {
                 while (tempQueue.length > 0) {
                     var tempEle = tempQueue.pop();
                     result.push(tempEle);
-                    // 每次检查4个方向，并保证不再result中
+                    // 每次检查4个方向，并保证不在result中
                     if (tempEle.indexY > 0 && Ele.matrix[tempEle.indexX][tempEle.indexY - 1] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX][tempEle.indexY - 1].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX][tempEle.indexY - 1]) == -1) {
                         tempQueue.push(Ele.matrix[tempEle.indexX][tempEle.indexY - 1]);
                     }

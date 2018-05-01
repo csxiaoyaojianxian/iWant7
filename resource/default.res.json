@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "description_json,disappear_mp3,down_mp3,tap_mp3",
+			"keys": "description_json,disappear_mp3,down_mp3,tap_mp3,lose_mp3,2_mp3,3_wav,4_wav,bg_png",
 			"name": "preload"
 		}
 	],
@@ -25,6 +25,31 @@
 			"name": "tap_mp3",
 			"type": "sound",
 			"url": "assets/music/tap.mp3"
+		},
+		{
+			"name": "lose_mp3",
+			"type": "sound",
+			"url": "assets/music/lose.mp3"
+		},
+		{
+			"name": "2_mp3",
+			"type": "sound",
+			"url": "assets/music/2.mp3"
+		},
+		{
+			"name": "3_wav",
+			"type": "sound",
+			"url": "assets/music/3.wav"
+		},
+		{
+			"name": "4_wav",
+			"type": "sound",
+			"url": "assets/music/4.wav"
+		},
+		{
+			"name": "bg_png",
+			"type": "image",
+			"url": "assets/images/bg.png"
 		}
 	]
 }

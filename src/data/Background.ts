@@ -10,7 +10,7 @@ class Background extends egret.DisplayObjectContainer {
     private drawBg() {
         var shp: egret.Shape = new egret.Shape();
 
-        shp.graphics.beginFill(0xcdcdcd, 1); 
+        shp.graphics.beginFill(0xfffaf0, 1); 
         shp.graphics.drawRect(0, 0, this.stage.stageWidth, this.stage.stageHeight);
         shp.graphics.endFill();
 
