@@ -6,3 +6,8 @@ $ egret create demo
 $ egret build  
 $ egret startserver -a  
 ```
+![](./doc/pic01.jpg)
+
+
+
+![](http://csxiaoyao.com/src/img/sign.jpg)

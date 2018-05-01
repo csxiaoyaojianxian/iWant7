@@ -214,7 +214,8 @@ class Ele extends egret.DisplayObjectContainer {
 
                 tw.to( {alpha:0}, 800 ).call( ()=>{ 
                     // Main.vector.removeChild(curEle);
-                    resolve();
+                    Ele.checkPuzzle([],resolve);
+                    // resolve();
                 });
             }
         });
