@@ -106,18 +106,22 @@ class Main extends egret.DisplayObjectContainer {
             case 3:
                 // 下落
                 this.bg.touchEnabled = false;
+                let p1,p2;
                 if(this.curEle[0].indexY > this.curEle[1].indexY){
-                    this.curEle[0].down();
-                    this.curEle[1].down();
+                    p1 = this.curEle[0].down();
+                    p2 = this.curEle[1].down();
                 }else{
-                    this.curEle[1].down();
-                    this.curEle[0].down();
+                    p1 = this.curEle[1].down();
+                    p2 = this.curEle[0].down();
                 }
-                setTimeout(() => {
-                    Ele.checkPuzzle(this.curEle);
-                    this.curEle = Ele.createPair(this);
-                    this.bg.touchEnabled = true;
-                }, 600);
+                Promise.all([p1,p2]).then( async ()=>{
+                    // 检查合并
+                    Ele.checkPuzzle([[this.curEle[1].indexX,this.curEle[1].indexY],[this.curEle[0].indexX,this.curEle[0].indexY]],()=>{
+                        // 创建元素
+                        this.curEle = Ele.createPair(this);
+                        this.bg.touchEnabled = true;
+                    });
+                });
                 break;
             case 2:
                 // 向右移动一格
@@ -126,7 +130,6 @@ class Main extends egret.DisplayObjectContainer {
                     this.curEle[0].moveWithOutAnimation(this.curEle[0].indexX+1,this.curEle[0].indexY);
                     this.curEle[1].moveWithOutAnimation(this.curEle[1].indexX+1,this.curEle[1].indexY);
                 }
-                
                 break;
             case 4:
                 // 向左移动一格

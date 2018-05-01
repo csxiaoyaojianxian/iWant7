@@ -84,13 +84,11 @@ class Ele extends egret.DisplayObjectContainer {
     }
 
     // 移动到指定位置，并记录matrix
-    public move(indexX:number,indexY:number,callback:Function=null){
+    public move(indexX:number,indexY:number,callback:Function=null,remove:boolean=false) {
+        console.log('move');
         var distanceX = indexX - this.indexX;
         var distanceY = indexY - this.indexY;
         var distance = distanceX > distanceY ? distanceX : distanceY;
-
-        Ele.checkQueue.push([indexX,indexY]);
-        Ele.checkQueue.push([this.indexX,this.indexY]);
 
         Ele.matrix[this.indexX][this.indexY] = null;
         Ele.matrix[indexX][indexY] = this;
@@ -100,18 +98,22 @@ class Ele extends egret.DisplayObjectContainer {
         console.log(Ele.matrix);
 
         // 自由落体
+
         var tw = egret.Tween.get( this.sprite );
-        tw.to( {
+        var promise = new Promise((resolve,reject)=>{tw.to( {
             x:65 + 86 * indexX,
             y:this.baseHeight + 86 * indexY
-        }, Math.sqrt(distance)*200,  egret.Ease.circIn );
-
-        // 执行回调
-        if(callback){
-            setTimeout(()=> {
+        }, Math.sqrt(distance)*200,  egret.Ease.circIn )
+        .call(()=>{
+            if(remove){
+                Main.vector.removeChild(this);
+                Ele.matrix[indexX][indexY] = null;
+            }
+            if(callback){
                 callback();
-            }, Math.sqrt(distance)*200);
-        }
+            }
+            resolve();
+        })});
 
         // 播放音效、震动
         var downSound:egret.Sound = RES.getRes("down_mp3");
@@ -121,7 +123,7 @@ class Ele extends egret.DisplayObjectContainer {
             platform.vibrateShort();
         }, distance*80);
         
-        
+        return promise;
     }
 
     // 只移动，无动画，且不计入matrix
@@ -136,13 +138,14 @@ class Ele extends egret.DisplayObjectContainer {
 
     // 下落到能下落的最低处
     public down(){
+        console.log('down');
         var indexY = Ele.getDownLocation( this );
-        console.log(indexY);
-        this.move(this.indexX,indexY);
+        return this.move(this.indexX,indexY);
     }
 
     // 创建新元素
     public static createPair(parent){
+        console.log('createPair');
         // 获取num1   0-6 随机数
         var num1 = Math.floor(Math.random()*7);
         // 获取num2  num1+num2 != 7
@@ -165,106 +168,158 @@ class Ele extends egret.DisplayObjectContainer {
         return curEle;
     }
     public static create(num,indexX,indexY){
+        console.log('create');
         var ele:Ele = new Ele(num, indexX, indexY);
         // TODO 添加事件
         ele.touchEnabled = true;
-        // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, ele.remove, ele );
+        // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, Ele.remove, ele );
         // ele.addEventListener( egret.TouchEvent.TOUCH_TAP, ()=>ele.changeTo7(true,false,true,false), ele );
         return ele;
     }
 
-    public remove(){
-        this.alpha = 0;
-        Ele.matrix[this.indexX][this.indexY] = null;
-        // 该元素上方的元素下移
-        for(var i = this.indexY-1; i >= 0; i--){
-            // console.log("Ele.matrix.indexY:"+i);
-            if(Ele.matrix[this.indexX][i]){
-                Ele.matrix[this.indexX][i].down();
+    // 批量移除元素 [[indexX,indexY],[indexX,indexY]], 需要后续配合整理元素
+    public static remove(locations:number[][]){
+        console.log('remove');
+        locations.forEach((location)=>{
+            var curEle:Ele = Ele.matrix[location[0]][location[1]];
+            if(curEle){
+                Main.vector.removeChild(curEle);
+                Ele.matrix[location[0]][location[1]] = null;
             }
-        }
+        })
     }
 
     // 转化为7
-    public changeTo7(top:boolean,right:boolean,bottom:boolean,left:boolean){
+    public async changeTo7(top:boolean,right:boolean,bottom:boolean,left:boolean, callback:Function=null){
+        console.log('changeTo7');
         if(!top && !right && !bottom && !left){
             return;
         }
 
         var indexX:number = this.indexX;
         var indexY:number = this.indexY;
-        Ele.matrix[indexX][indexY].alpha = 0;
+        // Ele.matrix[indexX][indexY].alpha = 0;
         var curEle:Ele = this;
+        var curNum:number = Ele.getValueByNum(curEle.num);
+        // 消除当前元素
+        curEle.move(curEle.indexX, curEle.indexY, null, true);
+
         var eleTop:Ele, eleRight:Ele, eleBottom:Ele, eleLeft:Ele;
 
-        if(top){
+        let p1,p2,p3,p4;
+        if(top && Ele.matrix[indexX][indexY-1]){
             eleTop = Ele.matrix[indexX][indexY-1];
-            Ele.matrix[indexX][indexY-1].move(indexX,indexY);
-        }
-        if(right){
-            eleRight = Ele.matrix[indexX+1][indexY];
-            Ele.matrix[indexX+1][indexY].move(indexX,indexY);
-        }
-        if(bottom){
-            eleBottom = Ele.matrix[indexX][indexY+1];
-            Ele.matrix[indexX][indexY+1].move(indexX,indexY);
-        }
-        if(left){
-            eleLeft = Ele.matrix[indexX-1][indexY];
-            Ele.matrix[indexX-1][indexY].move(indexX,indexY);
-        }
-
-        // 计算有几次合并
-        var times:boolean[] = [top,right,bottom,left].filter( (ele,index,array)=> {
-            if(ele){
-                return true;
+            if( (Ele.getValueByNum(eleTop.num) + curNum) == 7 ){
+                console.log('top');
+                top = true;
+                
+                    p1 = Ele.matrix[indexX][indexY-1].move(indexX,indexY,null,true);
+            }else{
+                top = false;
             }
-            return false;
-        });
-        var newEle:Ele;
-        switch(times.length){
-            case 1:
-                newEle = Ele.create(7, indexX, indexY);
-                break;
-            case 2:
-                // 双重7
-                newEle = Ele.create(8, indexX, indexY);
-                break;
-            case 3:
-                // 三重7
-                newEle = Ele.create(8, indexX, indexY);
-                break;
-            default:
-                newEle = Ele.create(8, indexX, indexY);
+        }else{
+            top = false;
+        }
+        if(right && Ele.matrix[indexX+1] && Ele.matrix[indexX+1][indexY]){
+            eleRight = Ele.matrix[indexX+1][indexY];
+            if( (Ele.getValueByNum(eleRight.num) + curNum) == 7 ){
+                console.log('right');
+                right = true;
+                    p2 = Ele.matrix[indexX+1][indexY].move(indexX,indexY,null,true);
+            }else{
+                right = false;
+            }
+        }else{
+            right = false;
+        }
+        if(bottom && Ele.matrix[indexX][indexY+1]){
+            eleBottom = Ele.matrix[indexX][indexY+1];
+            if( (Ele.getValueByNum(eleBottom.num) + curNum) == 7 ){
+                console.log('bottom');
+                bottom = true;
+                    p3 = Ele.matrix[indexX][indexY+1].move(indexX,indexY,null,true);
+            }else{
+                bottom = false;
+            }
+        }else{
+            bottom = false;
+        }
+        if(left && Ele.matrix[indexX-1] && Ele.matrix[indexX-1][indexY]){
+            eleLeft = Ele.matrix[indexX-1][indexY];
+            if( (Ele.getValueByNum(eleLeft.num) + curNum) == 7 ){
+                console.log('left');
+                left = true;
+                    p4 = Ele.matrix[indexX-1][indexY].move(indexX,indexY,null,true);
+            }else{
+                left = false;
+            }
+        }else{
+            left = false;
         }
 
-        Main.vector.addChild(newEle);
-        
-        setTimeout(function() {
-            // 原地移动，目的是为了记录matrix
-            [curEle,eleTop,eleRight,eleBottom,eleLeft].forEach((ele)=>{
-                if(ele){
-                    ele.alpha = 0;
-                    ele = null;
+        // 等待合并动画
+        await Promise.all([p1, p2, p3, p4]).then(async ()=>{
+            // 当前元素不为7则需要创建新元素
+                // 计算有几次合并
+                var times:boolean[] = [top,right,bottom,left].filter( (ele,index,array)=> {
+                    if(ele){
+                        return true;
+                    }
+                    return false;
+                });
+                
+                var newEle:Ele;
+                switch(times.length){
+                    case 0:
+                        return;
+                    case 1:
+                        newEle = Ele.create(7, indexX, indexY);
+                        break;
+                    case 2:
+                        // 双重7
+                        newEle = Ele.create(8, indexX, indexY);
+                        break;
+                    case 3:
+                        // 三重7
+                        newEle = Ele.create(8, indexX, indexY);
+                        break;
+                    default:
+                        newEle = Ele.create(8, indexX, indexY);
                 }
+                
+                // 原地移动，目的是为了记录matrix
+                await newEle.move(indexX,indexY);
+                Main.vector.addChild(newEle);
+
+            let pTidy1,pTidy2,pTidy3;
+            pTidy1 = new Promise((resolve,reject)=>{
+                Ele.tidyColumn(indexX-1,resolve);
+            });
+            pTidy2 = new Promise((resolve,reject)=>{
+                Ele.tidyColumn(indexX,resolve);
+            });
+            pTidy3 = new Promise((resolve,reject)=>{
+                Ele.tidyColumn(indexX+1,resolve);
+            });
+            Promise.all([pTidy1,pTidy2,pTidy3]).then(()=>{
+                Ele.checkPuzzle([],callback);
             });
             
-            newEle.move(indexX,indexY);
-            Ele.tidyColumn(indexX-1);
-            Ele.tidyColumn(indexX);
-            Ele.tidyColumn(indexX+1);
-
-        }, 300);
-        
+        });
     }
 
     // 清理某一列的空格
-    public static tidyColumn(indexX:number){
+    public static async tidyColumn(indexX:number,callback:Function=null){
+        if(indexX < 0 || indexX > 5){
+            callback?callback():null;
+            return;
+        }
         // 记录可以放置的空位Y坐标
         var p1:number = 8;
         // 记录当前空位上方有元素的最低点坐标
         var p2:number = 8;
         while(1){
+            console.log("indexX:"+indexX);
             while(p1>=0 && Ele.matrix[indexX][p1]!=null){
                 p1--;
             }
@@ -276,9 +331,10 @@ class Ele extends egret.DisplayObjectContainer {
                 break;
             }
             if(p1>=2 && p2>=0){
-                Ele.matrix[indexX][p2].move(indexX,p1);
+                await Ele.matrix[indexX][p2].move(indexX,p1);
             }
         }
+        callback?callback():null;
 
     }
 
@@ -354,6 +410,104 @@ class Ele extends egret.DisplayObjectContainer {
         return indexY;
     }
 
+    // 检查7的数量并移除
+    public static check7(){
+        // 计算全局
+        for( var i = 0; i < 6; i++ ){
+            for( var j = 8; j >= 0; j-- ){
+                
+            }
+        }
+    }
+
+    // 检查队列，用于存放全图中可组成7的元素合并次数，找出最大值进行操作
+    public static checkQueue:number[] = [];
+    // 检查是否可以组成7，传入的参数为优先的元素 [ [indexX,indexY],[indexX,indexY] ]
+    public static checkPuzzle(array:number[][]=[],callback:Function=null){
+        console.log('checkPuzzle');
+        // 存储最大的变换 [indexX, indexY, weight]
+        var maxWeight:number[] = [0,0,0];
+        // 优先计算传入的参数
+        array.forEach((ele)=>{
+            var i = ele[0];
+            var j = ele[1];
+            var k = 0;
+            if(Ele.matrix[i][j] !== null){
+                var curNum = Ele.getValueByNum(Ele.matrix[i][j].num);
+                // top 
+                if(Ele.matrix[i][j-1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j-1].num) == 7)){
+                    k++;
+                }
+                // right 
+                if(Ele.matrix[i+1] && Ele.matrix[i+1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i+1][j].num) == 7)){
+                    k++;
+                }
+                // bottom
+                if(Ele.matrix[i] && Ele.matrix[i][j+1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j+1].num) == 7)){
+                    k++;
+                }
+                // left
+                if(Ele.matrix[i-1] && Ele.matrix[i-1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i-1][j].num) == 7)){
+                    k++;
+                }
+            }
+            // 当前的变换次数 > 前面元素的最大变换次数
+            if( k > maxWeight[2] ){
+                maxWeight[0] = i;
+                maxWeight[1] = j;
+                maxWeight[2] = k;
+            }
+        });
+
+        // 计算全局
+        for( var i = 0; i < 6; i++ ){
+            for( var j = 8; j >= 0; j-- ){
+                var k = 0;
+                if(Ele.matrix[i][j] !== null){
+                    var curNum = Ele.getValueByNum(Ele.matrix[i][j].num);
+                    // top 
+                    if(Ele.matrix[i][j-1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j-1].num) == 7)){
+                        k++;
+                    }
+                    // right 
+                    if(Ele.matrix[i+1] && Ele.matrix[i+1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i+1][j].num) == 7)){
+                        k++;
+                    }
+                    // bottom
+                    if(Ele.matrix[i] && Ele.matrix[i][j+1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j+1].num) == 7)){
+                        k++;
+                    }
+                    // left
+                    if(Ele.matrix[i-1] && Ele.matrix[i-1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i-1][j].num) == 7)){
+                        k++;
+                    }
+                }
+                // 当前的变换次数 > 前面元素的最大变换次数
+                if( k > maxWeight[2] ){
+                    maxWeight[0] = i;
+                    maxWeight[1] = j;
+                    maxWeight[2] = k;
+                }
+            }
+
+        }
+        // // 排序, 权重越大的优先
+        // weight.sort((ele1,ele2)=>{
+        //     return ele2[2]-ele1[2];//down
+        // });
+        if(maxWeight[2] == 0){
+            if(callback){
+                callback();
+            }
+            return;
+        }
+
+        // 变换
+        Ele.matrix[ maxWeight[0] ][ maxWeight[1] ].changeTo7(true,true,true,true,callback);
+        
+    }
+
+    /*
     // 检查队列，用于存放待检查元素的位置 [indexX,indexY]
     public static checkQueue:number[][] = [];
     // 检查是否可以组成7，每次需要传入至少一个元素加入待检查队列
@@ -459,7 +613,15 @@ class Ele extends egret.DisplayObjectContainer {
         },350);
         
 
-    }
+    }*/
 
+    // 根据num取得元素实际值
+    public static getValueByNum(num:number):number{
+        if(num == 8 || num == 9){
+            return 7;
+        }else{
+            return num;
+        }
+    }
 
 }

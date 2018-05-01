@@ -157,19 +157,27 @@ var Main = (function (_super) {
             case 3:
                 // 下落
                 this.bg.touchEnabled = false;
+                var p1 = void 0, p2 = void 0;
                 if (this.curEle[0].indexY > this.curEle[1].indexY) {
-                    this.curEle[0].down();
-                    this.curEle[1].down();
+                    p1 = this.curEle[0].down();
+                    p2 = this.curEle[1].down();
                 }
                 else {
-                    this.curEle[1].down();
-                    this.curEle[0].down();
+                    p1 = this.curEle[1].down();
+                    p2 = this.curEle[0].down();
                 }
-                setTimeout(function () {
-                    Ele.checkPuzzle(_this.curEle);
-                    _this.curEle = Ele.createPair(_this);
-                    _this.bg.touchEnabled = true;
-                }, 600);
+                Promise.all([p1, p2]).then(function () { return __awaiter(_this, void 0, void 0, function () {
+                    var _this = this;
+                    return __generator(this, function (_a) {
+                        // 检查合并
+                        Ele.checkPuzzle([[this.curEle[1].indexX, this.curEle[1].indexY], [this.curEle[0].indexX, this.curEle[0].indexY]], function () {
+                            // 创建元素
+                            _this.curEle = Ele.createPair(_this);
+                            _this.bg.touchEnabled = true;
+                        });
+                        return [2 /*return*/];
+                    });
+                }); });
                 break;
             case 2:
                 // 向右移动一格
