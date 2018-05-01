@@ -116,10 +116,15 @@ class Main extends egret.DisplayObjectContainer {
                 }
                 Promise.all([p1,p2]).then( async ()=>{
                     // 检查合并
-                    Ele.checkPuzzle([[this.curEle[1].indexX,this.curEle[1].indexY],[this.curEle[0].indexX,this.curEle[0].indexY]],()=>{
-                        // 创建元素
-                        this.curEle = Ele.createPair(this);
-                        this.bg.touchEnabled = true;
+                    Ele.checkPuzzle([[this.curEle[1].indexX,this.curEle[1].indexY],[this.curEle[0].indexX,this.curEle[0].indexY]],(gameOver)=>{
+                        if(gameOver){
+                            Ele.reset();
+                            this.createGameScene();
+                        }else{
+                            // 创建元素
+                            this.curEle = Ele.createPair(this);
+                            this.bg.touchEnabled = true;
+                        }
                     });
                 });
                 break;

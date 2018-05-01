@@ -178,15 +178,32 @@ class Ele extends egret.DisplayObjectContainer {
     }
 
     // 批量移除元素 [[indexX,indexY],[indexX,indexY]], 需要后续配合整理元素
-    public static remove(locations:number[][]){
+    public static remove(locations:number[][],callback:Function=null){
         console.log('remove');
-        locations.forEach((location)=>{
-            var curEle:Ele = Ele.matrix[location[0]][location[1]];
-            if(curEle){
-                Main.vector.removeChild(curEle);
-                Ele.matrix[location[0]][location[1]] = null;
+        // locations.forEach((location)=>{
+        //     var curEle:Ele = Ele.matrix[location[0]][location[1]];
+        //     if(curEle){
+        //         Main.vector.removeChild(curEle);
+        //         Ele.matrix[location[0]][location[1]] = null;
+        //     }
+        // })
+        if(locations.length == 0){
+            callback?callback():null;
+        }
+        return new Promise((resolve,reject)=>{
+            for(var i = 0; i < locations.length; i++){
+                var location:number[] = locations[i];
+                var curEle:Ele = Ele.matrix[location[0]][location[1]];
+                if(curEle){
+                    Ele.matrix[location[0]][location[1]] = null;
+                }
+                var tw = egret.Tween.get( curEle );
+                tw.to( {alpha:0}, 800 ).call( ()=>{ 
+                    // Main.vector.removeChild(curEle);
+                    resolve();
+                });
             }
-        })
+        });
     }
 
     // 转化为7
@@ -212,8 +229,7 @@ class Ele extends egret.DisplayObjectContainer {
             if( (Ele.getValueByNum(eleTop.num) + curNum) == 7 ){
                 console.log('top');
                 top = true;
-                
-                    p1 = Ele.matrix[indexX][indexY-1].move(indexX,indexY,null,true);
+                p1 = Ele.matrix[indexX][indexY-1].move(indexX,indexY,null,true);
             }else{
                 top = false;
             }
@@ -225,7 +241,7 @@ class Ele extends egret.DisplayObjectContainer {
             if( (Ele.getValueByNum(eleRight.num) + curNum) == 7 ){
                 console.log('right');
                 right = true;
-                    p2 = Ele.matrix[indexX+1][indexY].move(indexX,indexY,null,true);
+                p2 = Ele.matrix[indexX+1][indexY].move(indexX,indexY,null,true);
             }else{
                 right = false;
             }
@@ -237,7 +253,7 @@ class Ele extends egret.DisplayObjectContainer {
             if( (Ele.getValueByNum(eleBottom.num) + curNum) == 7 ){
                 console.log('bottom');
                 bottom = true;
-                    p3 = Ele.matrix[indexX][indexY+1].move(indexX,indexY,null,true);
+                p3 = Ele.matrix[indexX][indexY+1].move(indexX,indexY,null,true);
             }else{
                 bottom = false;
             }
@@ -249,7 +265,7 @@ class Ele extends egret.DisplayObjectContainer {
             if( (Ele.getValueByNum(eleLeft.num) + curNum) == 7 ){
                 console.log('left');
                 left = true;
-                    p4 = Ele.matrix[indexX-1][indexY].move(indexX,indexY,null,true);
+                p4 = Ele.matrix[indexX-1][indexY].move(indexX,indexY,null,true);
             }else{
                 left = false;
             }
@@ -301,6 +317,7 @@ class Ele extends egret.DisplayObjectContainer {
             pTidy3 = new Promise((resolve,reject)=>{
                 Ele.tidyColumn(indexX+1,resolve);
             });
+
             Promise.all([pTidy1,pTidy2,pTidy3]).then(()=>{
                 Ele.checkPuzzle([],callback);
             });
@@ -335,6 +352,16 @@ class Ele extends egret.DisplayObjectContainer {
             }
         }
         callback?callback():null;
+
+    }
+
+    // 重置
+    public static reset(){
+        for(var i = 0; i < 6; i++){
+            for(var j = 0; j < 9; j++){
+                Ele.matrix[i][j] = null;
+            }
+        }
 
     }
 
@@ -411,19 +438,79 @@ class Ele extends egret.DisplayObjectContainer {
     }
 
     // 检查7的数量并移除
-    public static check7(){
+    public static check7s(){
         // 计算全局
+        var result:Ele[] = [];
+        var tempQueue:Ele[] = [];
+        outer:
         for( var i = 0; i < 6; i++ ){
             for( var j = 8; j >= 0; j-- ){
-                
+                result = [];
+                tempQueue = [];
+                if(Ele.matrix[i][j] != null && Ele.getValueByNum(Ele.matrix[i][j].num) == 7){
+                    tempQueue.push(Ele.matrix[i][j]);
+                }
+                while(tempQueue.length > 0){
+                    var tempEle = tempQueue.pop();
+                    result.push(tempEle);
+                    // 每次检查4个方向，并保证不再result中
+                    if(tempEle.indexY > 0 && Ele.matrix[tempEle.indexX][tempEle.indexY-1] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX][tempEle.indexY-1].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX][tempEle.indexY-1]) == -1 ){
+                        tempQueue.push(Ele.matrix[tempEle.indexX][tempEle.indexY-1]);
+                    }
+                    if(tempEle.indexX < 5 && Ele.matrix[tempEle.indexX+1][tempEle.indexY] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX+1][tempEle.indexY].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX+1][tempEle.indexY]) == -1 ){
+                        tempQueue.push(Ele.matrix[tempEle.indexX+1][tempEle.indexY]);
+                    }
+                    if(tempEle.indexX < 8 && Ele.matrix[tempEle.indexX][tempEle.indexY+1] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX][tempEle.indexY+1].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX][tempEle.indexY+1]) == -1 ){
+                        tempQueue.push(Ele.matrix[tempEle.indexX][tempEle.indexY+1]);
+                    }
+                    if(tempEle.indexX > 0 && Ele.matrix[tempEle.indexX-1][tempEle.indexY] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX-1][tempEle.indexY].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX-1][tempEle.indexY]) == -1 ){
+                        tempQueue.push(Ele.matrix[tempEle.indexX-1][tempEle.indexY]);
+                    }
+                }
+                if(result.length >= 3){
+                    break outer;
+                }
             }
         }
+        
+        return new Promise(async (resolve,reject)=>{
+            if(result.length >= 3){
+                var param:number[][] = [];
+                result.forEach((res)=>{
+                    param.push([res.indexX,res.indexY]);
+                });
+                await Ele.remove(param);
+                let pTidy = [];
+                for(var i = 0; i < 6; i++){
+                    new Promise((res,rej)=>{
+                        Ele.tidyColumn(i,res);
+                    });
+                }
+                Promise.all(pTidy).then(()=>{
+                    resolve(true);
+                });
+            }else{
+                resolve(false);
+            }
+        });
+
+    }
+
+    public static checkGameOver(){
+        for(var i = 0; i < 6; i++){
+            for(var j = 0; j < 2; j++){
+                if(Ele.matrix[i][j] != null){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // 检查队列，用于存放全图中可组成7的元素合并次数，找出最大值进行操作
     public static checkQueue:number[] = [];
     // 检查是否可以组成7，传入的参数为优先的元素 [ [indexX,indexY],[indexX,indexY] ]
-    public static checkPuzzle(array:number[][]=[],callback:Function=null){
+    public static async checkPuzzle(array:number[][]=[],callback:Function=null){
         console.log('checkPuzzle');
         // 存储最大的变换 [indexX, indexY, weight]
         var maxWeight:number[] = [0,0,0];
@@ -496,8 +583,13 @@ class Ele extends egret.DisplayObjectContainer {
         //     return ele2[2]-ele1[2];//down
         // });
         if(maxWeight[2] == 0){
+            await Ele.check7s();
+            var gameOver:boolean = Ele.checkGameOver();
+            if( gameOver == true){
+                console.log('game over');
+            }
             if(callback){
-                callback();
+                callback(gameOver);
             }
             return;
         }

@@ -170,10 +170,16 @@ var Main = (function (_super) {
                     var _this = this;
                     return __generator(this, function (_a) {
                         // 检查合并
-                        Ele.checkPuzzle([[this.curEle[1].indexX, this.curEle[1].indexY], [this.curEle[0].indexX, this.curEle[0].indexY]], function () {
-                            // 创建元素
-                            _this.curEle = Ele.createPair(_this);
-                            _this.bg.touchEnabled = true;
+                        Ele.checkPuzzle([[this.curEle[1].indexX, this.curEle[1].indexY], [this.curEle[0].indexX, this.curEle[0].indexY]], function (gameOver) {
+                            if (gameOver) {
+                                Ele.reset();
+                                _this.createGameScene();
+                            }
+                            else {
+                                // 创建元素
+                                _this.curEle = Ele.createPair(_this);
+                                _this.bg.touchEnabled = true;
+                            }
                         });
                         return [2 /*return*/];
                     });

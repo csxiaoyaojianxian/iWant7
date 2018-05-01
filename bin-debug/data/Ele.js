@@ -200,13 +200,31 @@ var Ele = (function (_super) {
         return ele;
     };
     // 批量移除元素 [[indexX,indexY],[indexX,indexY]], 需要后续配合整理元素
-    Ele.remove = function (locations) {
+    Ele.remove = function (locations, callback) {
+        if (callback === void 0) { callback = null; }
         console.log('remove');
-        locations.forEach(function (location) {
-            var curEle = Ele.matrix[location[0]][location[1]];
-            if (curEle) {
-                Main.vector.removeChild(curEle);
-                Ele.matrix[location[0]][location[1]] = null;
+        // locations.forEach((location)=>{
+        //     var curEle:Ele = Ele.matrix[location[0]][location[1]];
+        //     if(curEle){
+        //         Main.vector.removeChild(curEle);
+        //         Ele.matrix[location[0]][location[1]] = null;
+        //     }
+        // })
+        if (locations.length == 0) {
+            callback ? callback() : null;
+        }
+        return new Promise(function (resolve, reject) {
+            for (var i = 0; i < locations.length; i++) {
+                var location = locations[i];
+                var curEle = Ele.matrix[location[0]][location[1]];
+                if (curEle) {
+                    Ele.matrix[location[0]][location[1]] = null;
+                }
+                var tw = egret.Tween.get(curEle);
+                tw.to({ alpha: 0 }, 800).call(function () {
+                    // Main.vector.removeChild(curEle);
+                    resolve();
+                });
             }
         });
     };
@@ -385,6 +403,14 @@ var Ele = (function (_super) {
             });
         });
     };
+    // 重置
+    Ele.reset = function () {
+        for (var i = 0; i < 6; i++) {
+            for (var j = 0; j < 9; j++) {
+                Ele.matrix[i][j] = null;
+            }
+        }
+    };
     // 点击变换
     Ele.transform = function (ele1, ele2) {
         // 同一行
@@ -457,94 +483,173 @@ var Ele = (function (_super) {
         return indexY;
     };
     // 检查7的数量并移除
-    Ele.check7 = function () {
+    Ele.check7s = function () {
+        var _this = this;
         // 计算全局
-        for (var i = 0; i < 6; i++) {
+        var result = [];
+        var tempQueue = [];
+        outer: for (var i = 0; i < 6; i++) {
             for (var j = 8; j >= 0; j--) {
+                result = [];
+                tempQueue = [];
+                if (Ele.matrix[i][j] != null && Ele.getValueByNum(Ele.matrix[i][j].num) == 7) {
+                    tempQueue.push(Ele.matrix[i][j]);
+                }
+                while (tempQueue.length > 0) {
+                    var tempEle = tempQueue.pop();
+                    result.push(tempEle);
+                    // 每次检查4个方向，并保证不再result中
+                    if (tempEle.indexY > 0 && Ele.matrix[tempEle.indexX][tempEle.indexY - 1] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX][tempEle.indexY - 1].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX][tempEle.indexY - 1]) == -1) {
+                        tempQueue.push(Ele.matrix[tempEle.indexX][tempEle.indexY - 1]);
+                    }
+                    if (tempEle.indexX < 5 && Ele.matrix[tempEle.indexX + 1][tempEle.indexY] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX + 1][tempEle.indexY].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX + 1][tempEle.indexY]) == -1) {
+                        tempQueue.push(Ele.matrix[tempEle.indexX + 1][tempEle.indexY]);
+                    }
+                    if (tempEle.indexX < 8 && Ele.matrix[tempEle.indexX][tempEle.indexY + 1] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX][tempEle.indexY + 1].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX][tempEle.indexY + 1]) == -1) {
+                        tempQueue.push(Ele.matrix[tempEle.indexX][tempEle.indexY + 1]);
+                    }
+                    if (tempEle.indexX > 0 && Ele.matrix[tempEle.indexX - 1][tempEle.indexY] != null && Ele.getValueByNum(Ele.matrix[tempEle.indexX - 1][tempEle.indexY].num) == 7 && result.indexOf(Ele.matrix[tempEle.indexX - 1][tempEle.indexY]) == -1) {
+                        tempQueue.push(Ele.matrix[tempEle.indexX - 1][tempEle.indexY]);
+                    }
+                }
+                if (result.length >= 3) {
+                    break outer;
+                }
             }
         }
+        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+            var param, pTidy, i;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(result.length >= 3)) return [3 /*break*/, 2];
+                        param = [];
+                        result.forEach(function (res) {
+                            param.push([res.indexX, res.indexY]);
+                        });
+                        return [4 /*yield*/, Ele.remove(param)];
+                    case 1:
+                        _a.sent();
+                        pTidy = [];
+                        for (i = 0; i < 6; i++) {
+                            new Promise(function (res, rej) {
+                                Ele.tidyColumn(i, res);
+                            });
+                        }
+                        Promise.all(pTidy).then(function () {
+                            resolve(true);
+                        });
+                        return [3 /*break*/, 3];
+                    case 2:
+                        resolve(false);
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); });
+    };
+    Ele.checkGameOver = function () {
+        for (var i = 0; i < 6; i++) {
+            for (var j = 0; j < 2; j++) {
+                if (Ele.matrix[i][j] != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     };
     // 检查是否可以组成7，传入的参数为优先的元素 [ [indexX,indexY],[indexX,indexY] ]
     Ele.checkPuzzle = function (array, callback) {
         if (array === void 0) { array = []; }
         if (callback === void 0) { callback = null; }
-        console.log('checkPuzzle');
-        // 存储最大的变换 [indexX, indexY, weight]
-        var maxWeight = [0, 0, 0];
-        // 优先计算传入的参数
-        array.forEach(function (ele) {
-            var i = ele[0];
-            var j = ele[1];
-            var k = 0;
-            if (Ele.matrix[i][j] !== null) {
-                var curNum = Ele.getValueByNum(Ele.matrix[i][j].num);
-                // top 
-                if (Ele.matrix[i][j - 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j - 1].num) == 7)) {
-                    k++;
+        return __awaiter(this, void 0, void 0, function () {
+            var maxWeight, i, j, k, curNum, gameOver;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        console.log('checkPuzzle');
+                        maxWeight = [0, 0, 0];
+                        // 优先计算传入的参数
+                        array.forEach(function (ele) {
+                            var i = ele[0];
+                            var j = ele[1];
+                            var k = 0;
+                            if (Ele.matrix[i][j] !== null) {
+                                var curNum = Ele.getValueByNum(Ele.matrix[i][j].num);
+                                // top 
+                                if (Ele.matrix[i][j - 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j - 1].num) == 7)) {
+                                    k++;
+                                }
+                                // right 
+                                if (Ele.matrix[i + 1] && Ele.matrix[i + 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i + 1][j].num) == 7)) {
+                                    k++;
+                                }
+                                // bottom
+                                if (Ele.matrix[i] && Ele.matrix[i][j + 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j + 1].num) == 7)) {
+                                    k++;
+                                }
+                                // left
+                                if (Ele.matrix[i - 1] && Ele.matrix[i - 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i - 1][j].num) == 7)) {
+                                    k++;
+                                }
+                            }
+                            // 当前的变换次数 > 前面元素的最大变换次数
+                            if (k > maxWeight[2]) {
+                                maxWeight[0] = i;
+                                maxWeight[1] = j;
+                                maxWeight[2] = k;
+                            }
+                        });
+                        // 计算全局
+                        for (i = 0; i < 6; i++) {
+                            for (j = 8; j >= 0; j--) {
+                                k = 0;
+                                if (Ele.matrix[i][j] !== null) {
+                                    curNum = Ele.getValueByNum(Ele.matrix[i][j].num);
+                                    // top 
+                                    if (Ele.matrix[i][j - 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j - 1].num) == 7)) {
+                                        k++;
+                                    }
+                                    // right 
+                                    if (Ele.matrix[i + 1] && Ele.matrix[i + 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i + 1][j].num) == 7)) {
+                                        k++;
+                                    }
+                                    // bottom
+                                    if (Ele.matrix[i] && Ele.matrix[i][j + 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j + 1].num) == 7)) {
+                                        k++;
+                                    }
+                                    // left
+                                    if (Ele.matrix[i - 1] && Ele.matrix[i - 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i - 1][j].num) == 7)) {
+                                        k++;
+                                    }
+                                }
+                                // 当前的变换次数 > 前面元素的最大变换次数
+                                if (k > maxWeight[2]) {
+                                    maxWeight[0] = i;
+                                    maxWeight[1] = j;
+                                    maxWeight[2] = k;
+                                }
+                            }
+                        }
+                        if (!(maxWeight[2] == 0)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, Ele.check7s()];
+                    case 1:
+                        _a.sent();
+                        gameOver = Ele.checkGameOver();
+                        if (gameOver == true) {
+                            console.log('game over');
+                        }
+                        if (callback) {
+                            callback(gameOver);
+                        }
+                        return [2 /*return*/];
+                    case 2:
+                        // 变换
+                        Ele.matrix[maxWeight[0]][maxWeight[1]].changeTo7(true, true, true, true, callback);
+                        return [2 /*return*/];
                 }
-                // right 
-                if (Ele.matrix[i + 1] && Ele.matrix[i + 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i + 1][j].num) == 7)) {
-                    k++;
-                }
-                // bottom
-                if (Ele.matrix[i] && Ele.matrix[i][j + 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j + 1].num) == 7)) {
-                    k++;
-                }
-                // left
-                if (Ele.matrix[i - 1] && Ele.matrix[i - 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i - 1][j].num) == 7)) {
-                    k++;
-                }
-            }
-            // 当前的变换次数 > 前面元素的最大变换次数
-            if (k > maxWeight[2]) {
-                maxWeight[0] = i;
-                maxWeight[1] = j;
-                maxWeight[2] = k;
-            }
+            });
         });
-        // 计算全局
-        for (var i = 0; i < 6; i++) {
-            for (var j = 8; j >= 0; j--) {
-                var k = 0;
-                if (Ele.matrix[i][j] !== null) {
-                    var curNum = Ele.getValueByNum(Ele.matrix[i][j].num);
-                    // top 
-                    if (Ele.matrix[i][j - 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j - 1].num) == 7)) {
-                        k++;
-                    }
-                    // right 
-                    if (Ele.matrix[i + 1] && Ele.matrix[i + 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i + 1][j].num) == 7)) {
-                        k++;
-                    }
-                    // bottom
-                    if (Ele.matrix[i] && Ele.matrix[i][j + 1] && (curNum + Ele.getValueByNum(Ele.matrix[i][j + 1].num) == 7)) {
-                        k++;
-                    }
-                    // left
-                    if (Ele.matrix[i - 1] && Ele.matrix[i - 1][j] && (curNum + Ele.getValueByNum(Ele.matrix[i - 1][j].num) == 7)) {
-                        k++;
-                    }
-                }
-                // 当前的变换次数 > 前面元素的最大变换次数
-                if (k > maxWeight[2]) {
-                    maxWeight[0] = i;
-                    maxWeight[1] = j;
-                    maxWeight[2] = k;
-                }
-            }
-        }
-        // // 排序, 权重越大的优先
-        // weight.sort((ele1,ele2)=>{
-        //     return ele2[2]-ele1[2];//down
-        // });
-        if (maxWeight[2] == 0) {
-            if (callback) {
-                callback();
-            }
-            return;
-        }
-        // 变换
-        Ele.matrix[maxWeight[0]][maxWeight[1]].changeTo7(true, true, true, true, callback);
     };
     /*
     // 检查队列，用于存放待检查元素的位置 [indexX,indexY]
